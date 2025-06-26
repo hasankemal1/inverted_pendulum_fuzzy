@@ -1,0 +1,139 @@
+cmake_minimum_required(VERSION 3.10)
+
+
+project(fuzy LANGUAGES CXX)
+foreach(flag_var
+    CMAKE_C_FLAGS_RELEASE CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELWITHDEBINFO CMAKE_C_FLAGS_MINSIZEREL
+    CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELWITHDEBINFO CMAKE_CXX_FLAGS_MINSIZEREL)
+  if(${flag_var} MATCHES "/MD")
+    string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+  endif()
+  if(${flag_var} MATCHES "/MDd")
+    string(REGEX REPLACE "/MDd" "/MTd" ${flag_var} "${${flag_var}}")
+  endif()
+endforeach()
+
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STRING "" FORCE)
+
+
+if(MSVC)
+    add_compile_options(/W4)
+else()
+    add_compile_options(-Wall -Wextra)
+endif()
+set(CMAKE_TOOLCHAIN_FILE "C:/src/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE STRING "Vcpkg toolchain file")
+
+set(VCPKG_TARGET_TRIPLET x64-windows-static CACHE STRING "" FORCE)
+set(CMAKE_PREFIX_PATH "C:/src/vcpkg/installed/x64-windows-static")
+
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+option(FL_STATIC "Statically link to fuzzylite libraries" ON)
+# FuzzyLite yapılandırma seçenekleri
+set(FL_BUILD_STATIC ON CACHE BOOL "FuzzyLite statik olarak derle" FORCE)
+set(FL_BUILD_SHARED OFF CACHE BOOL "FuzzyLite dinamik olarak derleme" FORCE)
+set(FL_USE_FLOAT ON CACHE BOOL "FuzzyLite'ta float kullan" FORCE)
+set(FL_BUILD_TESTS OFF CACHE BOOL "FuzzyLite testlerini derleme" FORCE)
+set(FL_BUILD_BINARY OFF CACHE BOOL "FuzzyLite binary'sini derleme" FORCE)
+set(FL_CPP17 ON CACHE BOOL "C++17 özelliklerini etkinleştir" FORCE)
+
+
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build libraries as static" FORCE)
+
+
+find_package(SFML COMPONENTS Network Graphics Window Audio System CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
+find_package(ImGui-SFML CONFIG REQUIRED)
+find_package(implot CONFIG REQUIRED)
+
+
+set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(FUZZYLITE_DIR ${CMAKE_SOURCE_DIR}/thirdparty/fuzzylite)
+
+
+if(NOT EXISTS "${FUZZYLITE_DIR}/CMakeLists.txt")
+    message(FATAL_ERROR "FuzzyLite dizini bulunamadı: ${FUZZYLITE_DIR}")
+endif()
+
+
+add_subdirectory(${FUZZYLITE_DIR} ${CMAKE_BINARY_DIR}/fuzzylite)
+add_subdirectory(${NLOPT_DIR} ${CMAKE_BINARY_DIR}/nlopt)
+# FuzzyLite hedefi seçimi
+if(TARGET fuzzylite-static)
+    set(FUZZYLITE_TARGET fuzzylite-static)
+elseif(TARGET staticTarget)
+    set(FUZZYLITE_TARGET staticTarget)
+else()
+    message(FATAL_ERROR "FuzzyLite statik kütüphane hedefi bulunamadı!")
+endif()
+
+get_target_property(FL_INCLUDE_DIRS ${FUZZYLITE_TARGET} INTERFACE_INCLUDE_DIRECTORIES)
+message(STATUS "FuzzyLite include dizinleri: ${FL_INCLUDE_DIRS}")
+
+file(GLOB_RECURSE MY_SOURCES CONFIGURE_DEPENDS ${SRC_DIR}/*.cpp)
+file(GLOB_RECURSE MY_HEADERS "${INCLUDE_DIR}/*.h" "${INCLUDE_DIR}/*.hpp")
+
+
+add_executable(${PROJECT_NAME} ${MY_SOURCES} ${MY_HEADERS})
+
+
+target_include_directories(${PROJECT_NAME} PUBLIC
+  ${INCLUDE_DIR}
+  ${FUZZYLITE_DIR}
+  ${FUZZYLITE_DIR}/fuzzylite
+  ${FL_INCLUDE_DIRS}
+ 
+)
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    "${CMAKE_SOURCE_DIR}/resources"
+    "${CMAKE_BINARY_DIR}"
+)
+
+target_compile_definitions(${PROJECT_NAME} PUBLIC
+    RESOURCES_PATH=\"${CMAKE_SOURCE_DIR}/resources/\"
+    FL_USE_FLOAT
+)
+
+
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+
+
+add_dependencies(${PROJECT_NAME} ${FUZZYLITE_TARGET})
+
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    ${FUZZYLITE_TARGET}
+    SFML::Network
+    SFML::Graphics
+    SFML::Window
+    SFML::Audio
+    SFML::System
+    imgui::imgui
+    ImGui-SFML::ImGui-SFML
+    implot::implot
+   
+)
+
+message(STATUS "FuzzyLite hedefi ile bağlanıyor: ${FUZZYLITE_TARGET}")
+
+
+include(GNUInstallDirs)
+set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Installation directory")
+
+install(TARGETS ${PROJECT_NAME}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+if(EXISTS "${CMAKE_SOURCE_DIR}/resources")
+    install(DIRECTORY "${CMAKE_SOURCE_DIR}/resources"
+            DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()

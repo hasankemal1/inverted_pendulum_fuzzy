@@ -1,0 +1,72 @@
+Engine: CartInvertedPendulumMamdani
+InputVariable: thetaErr
+  enabled: true
+  range: -3.1416 3.1416
+  term: NB Trapezoid -3.1416 -3.1416 -1.0   -0.5
+  term: NS Triangle  -1.0   -0.5   -0.0349
+  term:  Z  Triangle  -0.0349  0      0.0349
+  term: PS Triangle   0.0349  0.5    1.0
+  term: PB Trapezoid  0.5     1.0    3.1416 3.1416
+InputVariable: thetaDotErr
+  enabled: true
+  range: -5 5
+  term: NB Trapezoid -5.0   -5.0   -3.0  -1.0
+  term: NS Triangle  -3.0  -1.0  -0.3
+  term: Z   Triangle  -0.3   0     0.3
+  term: PS Triangle   0.3    1.0   3.0
+  term: PB Trapezoid  1.0    3.0   5.0    5.0
+OutputVariable: Kp
+  enabled: true
+  defuzzifier: Centroid 1000
+  aggregation: Maximum
+  range: 0 200
+  term :Low Trapezoid  0   0   40   80
+  term :Medium Triangle 60 100  140
+  term :High Trapezoid 120 160 200 200
+OutputVariable: Kd
+  enabled: true
+  defuzzifier: Centroid 1000
+  aggregation: Maximum
+  range: 0 50
+  term :Low Trapezoid 0   0   8   16
+  term :Medium Triangle 12  25  38
+  term :High Trapezoid 30  42  50  50
+OutputVariable: Ki
+  enabled: true
+  defuzzifier: Centroid 1000
+  aggregation: Maximum
+  range: 0 10
+  term: Low Trapezoid  0   0   1   3
+  term: Medium Triangle 2   5   8
+  term: High Trapezoid  6   8.5 10  10
+RuleBlock: stabilization
+  enabled: true
+  conjunction: Minimum
+  disjunction: Maximum
+  implication: Minimum
+  activation: General
+  rule: if thetaErr is NB and thetaDotErr is NB then Kp is High   and Kd is High   and Ki is Low
+  rule: if thetaErr is NB and thetaDotErr is NS then Kp is High   and Kd is Medium and Ki is Low
+  rule: if thetaErr is NB and thetaDotErr is Z  then Kp is Medium and Kd is Medium and Ki is Low
+  rule: if thetaErr is NB and thetaDotErr is PS then Kp is High   and Kd is Medium and Ki is Low
+  rule: if thetaErr is NB and thetaDotErr is PB then Kp is High   and Kd is High   and Ki is Low
+  rule: if thetaErr is NS and thetaDotErr is NB then Kp is High   and Kd is Medium and Ki is Low
+  rule: if thetaErr is NS and thetaDotErr is NS then Kp is Medium and Kd is Medium and Ki is Low
+  rule: if thetaErr is NS and thetaDotErr is Z  then Kp is Medium and Kd is Low    and Ki is Low
+  rule: if thetaErr is NS and thetaDotErr is PS then Kp is Medium and Kd is Medium and Ki is Low
+  rule: if thetaErr is NS and thetaDotErr is PB then Kp is High   and Kd is Medium and Ki is Low
+  rule: if thetaErr is Z  and thetaDotErr is NB then Kp is Medium and Kd is Medium and Ki is Medium
+  rule: if thetaErr is Z  and thetaDotErr is NS then Kp is Medium and Kd is Low    and Ki is Medium
+  rule: if thetaErr is Z  and thetaDotErr is Z  then Kp is Low    and Kd is Low    and Ki is High
+  rule: if thetaErr is Z  and thetaDotErr is PS then Kp is Medium and Kd is Low    and Ki is Medium
+  rule: if thetaErr is Z  and thetaDotErr is PB then Kp is Medium and Kd is Medium and Ki is Medium
+  rule: if thetaErr is PS and thetaDotErr is NB then Kp is High   and Kd is Medium and Ki is Low
+  rule: if thetaErr is PS and thetaDotErr is NS then Kp is Medium and Kd is Medium and Ki is Low
+  rule: if thetaErr is PS and thetaDotErr is Z  then Kp is Medium and Kd is Low    and Ki is Low
+  rule: if thetaErr is PS and thetaDotErr is PS then Kp is Medium and Kd is Medium and Ki is Low
+  rule: if thetaErr is PS and thetaDotErr is PB then Kp is High   and Kd is Medium and Ki is Low
+  rule: if thetaErr is PB and thetaDotErr is NB then Kp is High   and Kd is High   and Ki is Low
+  rule: if thetaErr is PB and thetaDotErr is NS then Kp is High   and Kd is Medium and Ki is Low
+  rule: if thetaErr is PB and thetaDotErr is Z  then Kp is Medium and Kd is Medium and Ki is Low
+  rule: if thetaErr is PB and thetaDotErr is PS then Kp is High   and Kd is Medium and Ki is Low
+  rule: if thetaErr is PB and thetaDotErr is PB then Kp is High   and Kd is High   and Ki is Low

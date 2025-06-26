@@ -1,0 +1,43 @@
+Engine: FuzzyKiController
+
+InputVariable: errorx
+  enabled: true
+  range: -1.000 1.000
+  term: NB Triangle -1.00 -1.00 -0.66
+  term: NM Triangle -1.00 -0.66 -0.335
+  term: NS Triangle -0.66 -0.33 0.005
+  term: ZO Triangle -0.33 0.00 0.33
+  term: PS Triangle 0.00 0.33 0.66
+  term: PM Triangle 0.33 0.66 1.00
+  term: PB Triangle 0.66 1.00 1.00
+
+OutputVariable: force
+  enabled: true
+  range: -1.000 1.000
+  defuzzifier: Centroid 1000
+  accumulation: Maximum
+  term: NB Triangle -1.00 -1.00 -0.66
+  term: NM Triangle -1.00 -0.66 -0.33
+  term: NS Triangle -0.66 -0.33 0.00
+  term: ZO Triangle -0.33 0.00 0.33
+  term: PS Triangle 0.00 0.33 0.66
+  term: PM Triangle 0.33 0.66 1.00
+  term: PB Triangle 0.66 1.00 1.00
+
+
+RuleBlock: rules
+  enabled: true
+  conjunction: Minimum
+  disjunction: Maximum
+  implication: Minimum
+  activation: General
+
+  rule: if errorx is NB then force is PB
+  rule: if errorx is NM then force is PM
+  rule: if errorx is NS then force is PS
+  rule: if errorx is ZO then force is ZO
+  rule: if errorx is PS then force is NS
+  rule: if errorx is PM then force is NM
+  rule: if errorx is PB then force is NB
+
+

@@ -1,0 +1,3 @@
+[submodule "thirdparty/fuzzylite"]
+	path = thirdparty/fuzzylite
+	url = https://github.com/fuzzylite/fuzzylite.git
