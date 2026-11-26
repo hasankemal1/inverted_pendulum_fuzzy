@@ -57,25 +57,5 @@ cmake --build . --config Release
 
 If not using vcpkg, omit the -DCMAKE_TOOLCHAIN_FILE flag and ensure all dependencies are installed system-wide.
 
-Running the Application
-
-cd build/bin
-./fuzy
-
-Use the ImGui controls window to:
-
-Reset simulation state
-
-Speed Up / Slow Down simulation frame rate
-
-Pause / Resume physics and fuzzy control
-
-Start/Stop Fuzzy controller
-
-Toggle Phase Diagram and Error Plot windows
-
-Adjust Force and Friction Force sliders
-
-Logged error signals are appended to output.txt for analysis.
 
 
