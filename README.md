@@ -78,7 +78,4 @@ Adjust Force and Friction Force sliders
 
 Logged error signals are appended to output.txt for analysis.
 
-Author
-
-hasan kemal karaman
 
